@@ -1,14 +1,11 @@
 const pool = require('../database');
 const { body, validationResult } = require('express-validator');
+const { bookEntryValidator } = require('./validator');
 
-// Create a new book 
+// Create a new book entry
 const createBook = [
 
-  // Validation rules
-  body('title').notEmpty().withMessage('Enter the book title'),
-  body('author').notEmpty().withMessage('Enter the author name'),
-  body('isbn').isISBN().withMessage('Invalid ISBN entered'),
-  body('publication_date').isDate().withMessage('Invalid publication date entered'),
+  bookEntryValidator,
 
   async (req, res) => {
     const errors = validationResult(req);
@@ -30,8 +27,8 @@ const createBook = [
   }
 ];
 
-// Get all book 
-const getBooks = async (req, res) => {
+// Get all the books 
+const getAllBooks = async (req, res) => {
   try {
     const allBooks = await pool.query('SELECT * FROM books');
     res.json(allBooks.rows);
@@ -40,11 +37,12 @@ const getBooks = async (req, res) => {
   }
 };
 
+// Get a single book
 const getBookById = async (req, res) => {
   try {
     const { id } = req.params;
-    const allBooks = await pool.query('SELECT * FROM books where ID = $1', [id]);
-    res.json(allBooks.rows);
+    const bookById = await pool.query('SELECT * FROM books where ID = $1', [id]);
+    res.json(bookById.rows);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -53,10 +51,7 @@ const getBookById = async (req, res) => {
 // Update an existing book 
 const updateBook = [
 
-  body('title').notEmpty().withMessage('Enter the book title'),
-  body('author').notEmpty().withMessage('Enter the author name'),
-  body('isbn').isISBN().withMessage('Invalid ISBN entered'),
-  body('publication_date').isDate().withMessage('Invalid publication date entered'),
+  bookEntryValidator,
 
   async (req, res) => {
     const errors = validationResult(req);
@@ -92,7 +87,7 @@ const deleteBook = async (req, res) => {
     const deletedBook = await pool.query('DELETE FROM books WHERE id = $1 RETURNING *', [id]);
 
     if (deletedBook.rows.length === 0) {
-      return res.status(404).json({ error: 'Book not found' });
+      return res.status(404).json({ error: `Book with id ${id} not found` });
     }
 
     res.json({ message: 'Book deleted successfully' });
@@ -103,7 +98,7 @@ const deleteBook = async (req, res) => {
 
 module.exports = {
   createBook,
-  getBooks,
+  getAllBooks,
   updateBook,
   deleteBook,
   getBookById
