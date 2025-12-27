@@ -14,10 +14,9 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
-// Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
-  max: 100, // limit each IP to 100 requests 
+  max: 100,
 });
 
 app.use(limiter);
